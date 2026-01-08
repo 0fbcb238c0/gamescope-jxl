@@ -281,13 +281,13 @@ namespace gamescope
 			m_ScreenshotInfo = std::move( info );
 			hasRepaint = true;
 		}
-
-		void TakeScreenshot( bool bAVIF )
+		
+		void TakeScreenshot( bool bJXL )
 		{
 			char szTimeBuffer[ 1024 ];
 			time_t currentTime = time(0);
 			struct tm *pLocalTime = localtime( &currentTime );
-			strftime( szTimeBuffer, sizeof( szTimeBuffer ), bAVIF ? "/tmp/gamescope_%Y-%m-%d_%H-%M-%S.avif" : "/tmp/gamescope_%Y-%m-%d_%H-%M-%S.png", pLocalTime );
+			strftime( szTimeBuffer, sizeof( szTimeBuffer ), bJXL ? "/tmp/gamescope_%Y-%m-%d_%H-%M-%S.jxl" : "/tmp/gamescope_%Y-%m-%d_%H-%M-%S.png", pLocalTime );
 
 			TakeScreenshot( GamescopeScreenshotInfo
 			{
