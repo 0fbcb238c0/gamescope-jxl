@@ -107,6 +107,8 @@
 #include <jxl/color_encoding.h>
 #endif
 
+#include <chrono>
+
 static const int g_nBaseCursorScale = 36;
 
 #if HAVE_PIPEWIRE
@@ -2986,9 +2988,14 @@ paint_all( global_focus_t *pFocus, bool async )
 
 					assert( HAVE_JXL );
 #if HAVE_JXL
+					auto start = std::chrono::steady_clock::now();
 					JxlEncoderStatus status = JXL_ENC_SUCCESS;
 					
 					JxlEncoder* encoder = JxlEncoderCreate(NULL);
+
+					const uint32_t num_threads = JxlThreadParallelRunnerDefaultNumWorkerThreads();
+					void* runner = JxlThreadParallelRunnerCreate(NULL, num_threads);
+					JxlEncoderSetParallelRunner(encoder, JxlThreadParallelRunner, runner);
 					
 					JxlBasicInfo basic_info;
 					JxlEncoderInitBasicInfo(&basic_info);
@@ -3068,6 +3075,7 @@ paint_all( global_focus_t *pFocus, bool async )
 					}
 					
 					JxlEncoderDestroy(encoder);
+					JxlThreadParallelRunnerDestroy(runner);
 					
 					FILE *pScreenshotFile = nullptr;
 					if ( ( pScreenshotFile = fopen( oScreenshotInfo->szScreenshotPath.c_str(), "wb" ) ) == nullptr )
@@ -3081,6 +3089,9 @@ paint_all( global_focus_t *pFocus, bool async )
 					
 					xwm_log.infof( "Screenshot saved to %s", oScreenshotInfo->szScreenshotPath.c_str() );
 					bScreenshotSuccess = true;
+					auto end = std::chrono::steady_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+					fprintf(stderr, "JXL encode took %ld ms\n", ms);
 #endif
 				}
 				else if (pScreenshotTexture->format() == VK_FORMAT_B8G8R8A8_UNORM)

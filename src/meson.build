@@ -23,6 +23,7 @@ cap_dep = dependency('libcap', required: get_option('rt_cap'))
 epoll_dep = dependency('epoll-shim', required: false)
 sdl2_dep = dependency('SDL2', required: get_option('sdl2_backend'))
 jxl_dep = dependency('libjxl', version: '>=0.10.3', required: get_option('jxl_screenshots'))
+jxl_threads_dep = dependency('libjxl_threads', version: '>=0.10.3', required: get_option('jxl_screenshots'))
 pixman_dep = dependency('pixman-1')
 udev_dep = dependency('libudev')
 
@@ -198,7 +199,7 @@ gamescope_version = configure_file(
       dep_xxf86vm, dep_xres, glm_dep, drm_dep, wayland_server,
       xkbcommon, thread_dep, sdl2_dep, wlroots_dep,
       vulkan_dep, liftoff_dep, dep_xtst, dep_xmu, cap_dep, epoll_dep, pipewire_dep, librt_dep,
-      stb_dep, displayinfo_dep, openvr_dep, dep_xcursor, jxl_dep, dep_xi,
+      stb_dep, displayinfo_dep, openvr_dep, dep_xcursor, jxl_dep, jxl_threads_dep, dep_xi,
       libdecor_dep, eis_dep, luajit_dep, libinput_dep, libsystemd_dep, pixman_dep, udev_dep,
     ],
     install: true,
