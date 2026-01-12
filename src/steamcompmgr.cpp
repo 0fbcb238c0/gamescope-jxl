@@ -2969,20 +2969,15 @@ paint_all( global_focus_t *pFocus, bool async )
 						for (uint32_t x = 0; x < g_nOutputWidth; x++)
 						{
 							uint32_t uInPixel =
-								*(const uint32_t *)(mappedData +
-									y * pScreenshotTexture->rowPitch() +
-									x * 4);
+								*(const uint32_t *)(mappedData + y * pScreenshotTexture->rowPitch() + x * 4);
 
 							uint16_t r10 = (uInPixel >> 20) & 0x3FF;
 							uint16_t g10 = (uInPixel >> 10) & 0x3FF;
 							uint16_t b10 = (uInPixel >>  0) & 0x3FF;
 
-							imageData[(y * g_nOutputWidth + x) * 3 + 0] =
-								(r10 << 6) | (r10 >> 4);
-							imageData[(y * g_nOutputWidth + x) * 3 + 1] =
-								(g10 << 6) | (g10 >> 4);
-							imageData[(y * g_nOutputWidth + x) * 3 + 2] =
-								(b10 << 6) | (b10 >> 4);
+							imageData[(y * g_nOutputWidth + x) * 3 + 0] = (r10 << 6) | (r10 >> 4);
+							imageData[(y * g_nOutputWidth + x) * 3 + 1] = (g10 << 6) | (g10 >> 4);
+							imageData[(y * g_nOutputWidth + x) * 3 + 2] = (b10 << 6) | (b10 >> 4);
 						}
 					}
 
