@@ -2968,16 +2968,16 @@ paint_all( global_focus_t *pFocus, bool async )
 					{
 						for (uint32_t x = 0; x < g_nOutputWidth; x++)
 						{
-							uint32_t uInPixel =
-								*(const uint32_t *)(mappedData + y * pScreenshotTexture->rowPitch() + x * 4);
+							// Shift bits to store 10 bit data in 16 bit container
+							uint32_t uInPixel = *(const uint32_t *)(mappedData + y * pScreenshotTexture->rowPitch() + x * 4);
 
 							uint16_t r10 = (uInPixel >> 20) & 0x3FF;
 							uint16_t g10 = (uInPixel >> 10) & 0x3FF;
 							uint16_t b10 = (uInPixel >>  0) & 0x3FF;
 
-							imageData[(y * g_nOutputWidth + x) * 3 + 0] = (r10 << 6) | (r10 >> 4);
-							imageData[(y * g_nOutputWidth + x) * 3 + 1] = (g10 << 6) | (g10 >> 4);
-							imageData[(y * g_nOutputWidth + x) * 3 + 2] = (b10 << 6) | (b10 >> 4);
+							imageData[(y * g_nOutputWidth + x) * 3 + 0] = (r10 << 6);
+							imageData[(y * g_nOutputWidth + x) * 3 + 1] = (g10 << 6);
+							imageData[(y * g_nOutputWidth + x) * 3 + 2] = (b10 << 6);
 						}
 					}
 
@@ -2986,14 +2986,14 @@ paint_all( global_focus_t *pFocus, bool async )
 					auto start = std::chrono::steady_clock::now();
 					JxlEncoderStatus status = JXL_ENC_SUCCESS;
 					
-					JxlEncoder* encoder = JxlEncoderCreate(NULL);
+					JxlEncoder* encoder = JxlEncoderCreate( NULL);
 
 					const uint32_t num_threads = JxlThreadParallelRunnerDefaultNumWorkerThreads();
-					void* runner = JxlThreadParallelRunnerCreate(NULL, num_threads);
-					JxlEncoderSetParallelRunner(encoder, JxlThreadParallelRunner, runner);
+					void* runner = JxlThreadParallelRunnerCreate( NULL, num_threads );
+					JxlEncoderSetParallelRunner( encoder, JxlThreadParallelRunner, runner );
 					
 					JxlBasicInfo basic_info;
-					JxlEncoderInitBasicInfo(&basic_info);
+					JxlEncoderInitBasicInfo( &basic_info );
 
 					basic_info.xsize = g_nOutputWidth;
 					basic_info.ysize = g_nOutputHeight;
@@ -3004,15 +3004,16 @@ paint_all( global_focus_t *pFocus, bool async )
 					basic_info.alpha_bits = 0;
 					basic_info.uses_original_profile = true;
 
-					JxlEncoderSetBasicInfo(encoder, &basic_info);
+					JxlEncoderSetBasicInfo( encoder, &basic_info );
 
-					JxlPixelFormat pixel_format = {
+					JxlPixelFormat pixel_format =
+					{
 						3, JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0
 					};
 					
 					JxlColorEncoding color_encoding;
 
-					JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
+					JxlColorEncodingSetToSRGB( &color_encoding, JXL_FALSE );
 
 					color_encoding.color_space = JXL_COLOR_SPACE_RGB;
 					color_encoding.white_point = JXL_WHITE_POINT_D65;
@@ -3023,27 +3024,29 @@ paint_all( global_focus_t *pFocus, bool async )
 					color_encoding.transfer_function =
 						bHDRScreenshot ? JXL_TRANSFER_FUNCTION_PQ : JXL_TRANSFER_FUNCTION_SRGB;
 
-					JxlEncoderSetColorEncoding(encoder, &color_encoding);
+					JxlEncoderSetColorEncoding( encoder, &color_encoding );
 					
 					// Create frame settings
-					JxlEncoderFrameSettings* frame = JxlEncoderFrameSettingsCreate(encoder, NULL);
+					JxlEncoderFrameSettings* frame = JxlEncoderFrameSettingsCreate( encoder, NULL );
 					// Lossless
-					JxlEncoderSetFrameLossless(frame, JXL_TRUE);
+					JxlEncoderSetFrameLossless( frame, JXL_TRUE );
 					// Fastest effort
-					JxlEncoderFrameSettingsSetOption(frame, JXL_ENC_FRAME_SETTING_EFFORT, 1);
+					JxlEncoderFrameSettingsSetOption( frame, JXL_ENC_FRAME_SETTING_EFFORT, 1 );
 					
-					size_t data_size = g_nOutputWidth * g_nOutputHeight * 3 * sizeof(uint16_t);
+					size_t data_size = g_nOutputWidth * g_nOutputHeight * 3 * sizeof( uint16_t );
 					
-					JxlEncoderAddImageFrame(frame, &pixel_format, imageData.data(), data_size);
-					JxlEncoderCloseInput(encoder);
+					JxlEncoderAddImageFrame( frame, &pixel_format, imageData.data(), data_size );
+					JxlEncoderCloseInput( encoder );
 					
-					if (status != JXL_ENC_SUCCESS) {
-						xwm_log.errorf("Failed to add image to jxl encoder: %d", status);
+					if ( status != JXL_ENC_SUCCESS )
+					{
+						xwm_log.errorf( "Failed to add image to jxl encoder: %d", status );
 						return;
 					}
 					
-					if (status == JXL_ENC_ERROR) {
-						xwm_log.errorf("Failed to finish encoder");
+					if ( status == JXL_ENC_ERROR )
+					{
+						xwm_log.errorf( "Failed to finish encoder" );
 						return;
 					}
 					
@@ -3051,26 +3054,28 @@ paint_all( global_focus_t *pFocus, bool async )
 
 					uint8_t buffer[16384];
 					uint8_t* next_out = buffer;
-					size_t avail_out = sizeof(buffer);
+					size_t avail_out = sizeof( buffer );
 
-					for (;;) {
-						JxlEncoderStatus status =
-							JxlEncoderProcessOutput(encoder, &next_out, &avail_out);
+					for (;;)
+					{
+						JxlEncoderStatus status = JxlEncoderProcessOutput( encoder, &next_out, &avail_out );
 
 						size_t written = next_out - buffer;
-						if (written > 0) {
-							jxlOutput.insert(jxlOutput.end(), buffer, buffer + written);
+						if (written > 0)
+						{
+							jxlOutput.insert( jxlOutput.end(), buffer, buffer + written );
 							next_out = buffer;
-							avail_out = sizeof(buffer);
+							avail_out = sizeof( buffer );
 						}
 
-						if (status == JXL_ENC_SUCCESS) {
+						if ( status == JXL_ENC_SUCCESS )
+						{
 							break;
 						}
 					}
 					
-					JxlEncoderDestroy(encoder);
-					JxlThreadParallelRunnerDestroy(runner);
+					JxlEncoderDestroy( encoder );
+					JxlThreadParallelRunnerDestroy( runner );
 					
 					FILE *pScreenshotFile = nullptr;
 					if ( ( pScreenshotFile = fopen( oScreenshotInfo->szScreenshotPath.c_str(), "wb" ) ) == nullptr )
@@ -3086,7 +3091,7 @@ paint_all( global_focus_t *pFocus, bool async )
 					bScreenshotSuccess = true;
 					auto end = std::chrono::steady_clock::now();
 					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-					fprintf(stderr, "JXL encode took %ld ms\n", ms);
+					fprintf( stderr, "JXL encode took %ld ms\n", ms );
 #endif
 				}
 				else if (pScreenshotTexture->format() == VK_FORMAT_B8G8R8A8_UNORM)
