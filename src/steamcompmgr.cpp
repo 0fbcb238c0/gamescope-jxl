@@ -38,6 +38,7 @@
 #include <X11/extensions/xfixeswire.h>
 #include <X11/extensions/XInput2.h>
 #include <cstdint>
+#include <jxl/types.h>
 #include <memory>
 #include <thread>
 #include <condition_variable>
@@ -3010,7 +3011,7 @@ paint_all( global_focus_t *pFocus, bool async )
 					{
 						3, JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0
 					};
-					
+
 					JxlColorEncoding color_encoding;
 
 					JxlColorEncodingSetToSRGB( &color_encoding, JXL_FALSE );
@@ -3025,31 +3026,31 @@ paint_all( global_focus_t *pFocus, bool async )
 						bHDRScreenshot ? JXL_TRANSFER_FUNCTION_PQ : JXL_TRANSFER_FUNCTION_SRGB;
 
 					JxlEncoderSetColorEncoding( encoder, &color_encoding );
-					
+
 					// Create frame settings
 					JxlEncoderFrameSettings* frame = JxlEncoderFrameSettingsCreate( encoder, NULL );
 					// Lossless
 					JxlEncoderSetFrameLossless( frame, JXL_TRUE );
 					// Fastest effort
 					JxlEncoderFrameSettingsSetOption( frame, JXL_ENC_FRAME_SETTING_EFFORT, 1 );
-					
+
 					size_t data_size = g_nOutputWidth * g_nOutputHeight * 3 * sizeof( uint16_t );
 					
 					JxlEncoderAddImageFrame( frame, &pixel_format, imageData.data(), data_size );
 					JxlEncoderCloseInput( encoder );
-					
+
 					if ( status != JXL_ENC_SUCCESS )
 					{
 						xwm_log.errorf( "Failed to add image to jxl encoder: %d", status );
 						return;
 					}
-					
+
 					if ( status == JXL_ENC_ERROR )
 					{
 						xwm_log.errorf( "Failed to finish encoder" );
 						return;
 					}
-					
+
 					std::vector<uint8_t> jxlOutput;
 
 					uint8_t buffer[16384];
@@ -3073,20 +3074,20 @@ paint_all( global_focus_t *pFocus, bool async )
 							break;
 						}
 					}
-					
+
 					JxlEncoderDestroy( encoder );
 					JxlThreadParallelRunnerDestroy( runner );
-					
+
 					FILE *pScreenshotFile = nullptr;
 					if ( ( pScreenshotFile = fopen( oScreenshotInfo->szScreenshotPath.c_str(), "wb" ) ) == nullptr )
 					{
 						xwm_log.errorf( "Failed to fopen file: %s", oScreenshotInfo->szScreenshotPath.c_str() );
 						return;
 					}
-					
+
 					fwrite( jxlOutput.data(), 1, jxlOutput.size(), pScreenshotFile );
 					fclose( pScreenshotFile );
-					
+
 					xwm_log.infof( "Screenshot saved to %s", oScreenshotInfo->szScreenshotPath.c_str() );
 					bScreenshotSuccess = true;
 					auto end = std::chrono::steady_clock::now();
