@@ -2999,7 +2999,7 @@ paint_all( global_focus_t *pFocus, bool async )
 					JxlEncoderInitBasicInfo( &basic_info );
 					basic_info.xsize = g_nOutputWidth;
 					basic_info.ysize = g_nOutputHeight;
-					basic_info.bits_per_sample = bHDRScreenshot ? 10 : 8;
+					basic_info.bits_per_sample = 10;
 					basic_info.exponent_bits_per_sample = 0;
 					basic_info.num_color_channels = 3;
 					basic_info.num_extra_channels = 0;
